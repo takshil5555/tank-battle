@@ -77,7 +77,7 @@ let evts=[];
 const mine=i=>net.on?i===net.me:!(i===1&&ai);
 const ev=a=>{if(net.on&&net.role==='host')evts.push(a)};
 function setMsg(t){document.getElementById('msg').textContent=t}
-function connect(role){const code=(prompt(role==='host'?'Make up a room code (letters/numbers) and tell your friend:':'Enter the room code your friend made:')||'').trim().toUpperCase().slice(0,12);if(!code)return;
+function connect(role){if(document.activeElement)document.activeElement.blur();const code=(prompt(role==='host'?'Make up a room code (letters/numbers) and tell your friend:':'Enter the room code your friend made:')||'').trim().toUpperCase().slice(0,12);if(!code)return;
 if(net.ws)try{net.ws.close()}catch(e){}
 initAudio();net.role=role==='host'?'host':'guest';net.on=false;net.ready=false;
 let ws;try{ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host)}catch(e){setMsg('Online play needs the game opened from your own server');return}
@@ -120,7 +120,7 @@ const btn=[{down:0,t:0},{down:0,t:0}],keyMap={Space:0,Enter:1},ptr={},BT=[[60,H-
 function press(i){initAudio();if(net.on&&net.role==='guest'){if(!btn[1].down){btn[1].down=1;net.ws.send('{"t":"in","d":1}')}return}if(!btn[i].down){btn[i].down=1;btn[i].t=performance.now();if(state==='play')fire(tanks[i])}}
 function release(i){if(net.on&&net.role==='guest'){if(btn[1].down){btn[1].down=0;net.ws.send('{"t":"in","d":0}')}return}const b=btn[i];if(!b.down)return;b.down=0;if(state!=='play')return;tanks[i].dir*=-1}
 addEventListener('keydown',e=>{if(e.code in keyMap){e.preventDefault();const i=net.on?net.me:keyMap[e.code];if(net.on||!(i===1&&ai))press(i)}});
-addEventListener('keyup',e=>{if(e.code in keyMap)release(net.on?net.me:keyMap[e.code])});
+addEventListener('keyup',e=>{if(e.code in keyMap){e.preventDefault();release(net.on?net.me:keyMap[e.code])}});
 c.addEventListener('pointerdown',e=>{e.preventDefault();const r=c.getBoundingClientRect(),x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;
 const i=BT.findIndex(p=>Math.hypot(x-p[0],y-p[1])<56);if(i<0||!mine(i))return;ptr[e.pointerId]=i;try{c.setPointerCapture(e.pointerId)}catch(_){}press(i)});
 const up=e=>{if(e.pointerId in ptr){release(ptr[e.pointerId]);delete ptr[e.pointerId]}};
@@ -300,6 +300,7 @@ mode.onclick=()=>{if(net.on)return;ai=!ai;mode.textContent='Mode: '+(ai?'vs CPU'
 reset.onclick=fresh;
 const mb=document.getElementById('mute');mb.onclick=()=>{initAudio();mute=!mute;mb.textContent=mute?'\ud83d\udd07 Sound off':'\ud83d\udd0a Sound on'};
 document.querySelectorAll('.lv').forEach(b=>b.onclick=()=>{lvl=b.dataset.l;document.querySelectorAll('.lv').forEach(x=>x.classList.toggle('on',x===b));fresh()});
+document.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>b.blur()));
 hostb.onclick=()=>connect('host');joinb.onclick=()=>connect('join');
 upd();init();requestAnimationFrame(loop);
 </script></body></html>
